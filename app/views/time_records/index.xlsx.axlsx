@@ -1,0 +1,37 @@
+wb = xlsx_package.workbook
+
+wb.add_worksheet(name: "Registros") do |sheet|
+  # Estilos
+  title_style = sheet.styles.add_style(
+    bg_color: "333333", 
+    fg_color: "FFFFFF",
+    b: true,
+    alignment: { horizontal: :center }
+  )
+
+  # Título con la fecha
+  sheet.add_row ["Registros del día: #{@selected_date.strftime('%d/%m/%Y')}"], 
+    style: sheet.styles.add_style(b: true, sz: 14)
+  sheet.add_row [] # Fila vacía
+
+  # Encabezados
+  sheet.add_row [
+    "Nombre",
+    "Hora de Entrada",
+    "Hora de Salida",
+    "Notas"
+  ], style: title_style
+
+  # Datos
+  @records.each do |record|
+    sheet.add_row [
+      record.user.name,
+      record.clock_in&.strftime("%H:%M:%S"),
+      record.clock_out&.strftime("%H:%M:%S"),
+      record.notes
+    ]
+  end
+
+  # Ajustar el ancho de las columnas automáticamente
+  sheet.column_widths 20, 20, 20, 40
+end 

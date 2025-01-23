@@ -5,71 +5,65 @@
 
   <h1 class="text-center mb-4">Registro de Entrada y Salida</h1>
   
-  <h4 class="text-muted mb-4">
-    La fecha de hoy es <%= Date.current.strftime("%d/%m/%Y") %>
-  </h4>
-
-  <div class="card p-4 mt-3 mb-4">
-    <div class="form-group">
-      <%= label_tag :user_id, "Seleccionar Usuario" %>
-      <%= select_tag :user_id, 
-                    options_from_collection_for_select(@users, :id, :name), 
-                    class: "form-control mb-3",
-                    prompt: "Seleccione un usuario" %>
+  <div class="row align-items-center mb-4">
+    <div class="col">
+      <h4 class="text-muted">
+        Registros del día: <%= @selected_date.strftime("%d/%m/%Y") %>
+      </h4>
     </div>
-
-    <div class="d-flex gap-2">
-      <%= button_to "Entrada", 
-                   clock_in_time_records_path, 
-                   method: :post,
-                   form: { data: { turbo: true } },
-                   class: "btn btn-success",
-                   data: { user_id_param: true } %>
-
-      <%= button_to "Salida", 
-                   clock_out_time_records_path, 
-                   method: :patch,
-                   form: { data: { turbo: true } },
-                   class: "btn btn-danger",
-                   data: { user_id_param: true } %>
+    <div class="col-auto">
+      <%= form_tag time_records_path, method: :get, class: 'form-inline', data: { turbo_frame: 'time_records_content' } do %>
+        <div class="input-group">
+          <%= date_field_tag :date, @selected_date, class: 'form-control' %>
+          <%= submit_tag 'Buscar', class: 'btn btn-secondary' %>
+        </div>
+      <% end %>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <h5 class="mb-0">Registros del día</h5>
-    </div>
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-striped table-hover">
-          <thead class="table-light">
-            <tr>
-              <th>Nombre</th>
-              <th>Hora de Entrada</th>
-              <th>Hora de Salida</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @todays_records.each do |record| %>
-              <tr>
-                <td><%= record.user.name %></td>
-                <td><%= record.clock_in&.strftime("%H:%M:%S") %></td>
-                <td><%= record.clock_out&.strftime("%H:%M:%S") %></td>
-                <td>
-                  <% if record.clock_out.present? %>
-                    <span class="badge bg-secondary">Finalizado</span>
-                  <% else %>
-                    <span class="badge bg-success">En curso</span>
-                  <% end %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
+  <% if @selected_date == Date.current %>
+    <div class="card p-4 mt-3 mb-4">
+      <div class="form-group">
+        <%= label_tag :user_id, "Seleccionar Usuario" %>
+        <%= select_tag :user_id, 
+                      options_from_collection_for_select(@users, :id, :name), 
+                      class: "form-control mb-3",
+                      prompt: "Seleccione un usuario" %>
+      </div>
+
+      <div class="d-flex gap-2">
+        <%= button_to "Entrada", 
+                     clock_in_time_records_path, 
+                     method: :post,
+                     form: { data: { turbo: true } },
+                     class: "btn btn-success",
+                     data: { user_id_param: true } %>
+
+        <%= button_to "Salida", 
+                     clock_out_time_records_path, 
+                     method: :patch,
+                     form: { data: { turbo: true } },
+                     class: "btn btn-danger",
+                     data: { user_id_param: true } %>
       </div>
     </div>
-  </div>
+  <% end %>
+
+  <%= turbo_frame_tag 'time_records_content' do %>
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Registros</h5>
+        <%= link_to time_records_path(format: :xlsx, date: @selected_date), class: "btn btn-primary btn-sm" do %>
+          <i class="fas fa-file-excel"></i> Exportar a Excel
+        <% end %>
+      </div>
+      <div class="card-body">
+        <div id="time_records_table">
+          <%= render 'time_records_table', todays_records: @records %>
+        </div>
+      </div>
+    </div>
+  <% end %>
 </div>
 
 <%= javascript_tag do %>

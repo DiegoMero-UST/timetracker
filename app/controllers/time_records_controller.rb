@@ -2,9 +2,17 @@ class TimeRecordsController < ApplicationController
   def index
     @users = User.all
     @time_record = TimeRecord.new
-    @todays_records = TimeRecord.includes(:user)
-                               .where(date: Date.current)
-                               .order(clock_in: :desc)
+    @selected_date = params[:date].present? ? Date.parse(params[:date]) : Date.current
+    @records = TimeRecord.includes(:user)
+                        .where(date: @selected_date)
+                        .order(clock_in: :desc)
+
+    respond_to do |format|
+      format.html
+      format.xlsx {
+        response.headers['Content-Disposition'] = "attachment; filename=\"registros_#{@selected_date.strftime('%Y-%m-%d')}.xlsx\""
+      }
+    end
   end
 
   def clock_in
