@@ -1,17 +1,51 @@
 class TimeRecordsController < ApplicationController
   def index
-    @users = User.all
+    @users = User.all.order(:name)
     @time_record = TimeRecord.new
     @selected_date = params[:date].present? ? Date.parse(params[:date]) : Date.current
     @records = TimeRecord.includes(:user)
                         .where(date: @selected_date)
                         .order(clock_in: :desc)
+    @new_user = User.new  # Agregamos esto para el formulario
 
     respond_to do |format|
       format.html
       format.xlsx {
         response.headers['Content-Disposition'] = "attachment; filename=\"registros_#{@selected_date.strftime('%Y-%m-%d')}.xlsx\""
       }
+    end
+  end
+
+  def create_user
+    @user = User.new(user_params)
+    
+    respond_to do |format|
+      if @user.save
+        format.turbo_stream { 
+          render turbo_stream: [
+            turbo_stream.update('flash_messages', 
+              partial: 'shared/flash_messages', 
+              locals: { notice: 'Usuario creado exitosamente' }),
+            turbo_stream.update('user_select', 
+              partial: 'user_select', 
+              locals: { users: User.all.order(:name) }),
+            turbo_stream.update('new_user_form', 
+              partial: 'user_form', 
+              locals: { new_user: User.new })
+          ]
+        }
+      else
+        format.turbo_stream {
+          render turbo_stream: [
+            turbo_stream.update('flash_messages', 
+              partial: 'shared/flash_messages', 
+              locals: { alert: "Error: #{@user.errors.full_messages.join(', ')}" }),
+            turbo_stream.update('new_user_form', 
+              partial: 'user_form', 
+              locals: { new_user: @user })
+          ]
+        }
+      end
     end
   end
 
@@ -92,6 +126,10 @@ class TimeRecordsController < ApplicationController
   end
 
   private
+
+  def user_params
+    params.require(:user).permit(:name)
+  end
 
   def render_error(message)
     respond_to do |format|

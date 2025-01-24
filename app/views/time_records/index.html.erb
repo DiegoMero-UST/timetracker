@@ -25,10 +25,9 @@
     <div class="card p-4 mt-3 mb-4">
       <div class="form-group">
         <%= label_tag :user_id, "Seleccionar Usuario" %>
-        <%= select_tag :user_id, 
-                      options_from_collection_for_select(@users, :id, :name), 
-                      class: "form-control mb-3",
-                      prompt: "Seleccione un usuario" %>
+        <div id="user_select">
+          <%= render 'user_select', users: @users %>
+        </div>
       </div>
 
       <div class="d-flex gap-2">
@@ -45,6 +44,10 @@
                      form: { data: { turbo: true } },
                      class: "btn btn-danger",
                      data: { user_id_param: true } %>
+      </div>
+
+      <div id="new_user_form">
+        <%= render 'user_form', new_user: @new_user %>
       </div>
     </div>
   <% end %>

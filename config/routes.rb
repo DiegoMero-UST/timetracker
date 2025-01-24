@@ -14,6 +14,7 @@ Rails.application.routes.draw do
     collection do
       post :clock_in
       patch :clock_out
+      post :create_user
     end
   end
   root 'time_records#index'
